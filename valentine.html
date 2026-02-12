@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Will You Be My Valentine?</title>
+
+  <style>
+    :root{
+      --yesScale:1;
+    }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#0f172a;
+      color:white;
+      font-family:system-ui;
+      text-align:center;
+    }
+
+    .card{
+      background:#1e293b;
+      padding:30px;
+      border-radius:20px;
+      width:90%;
+      max-width:420px;
+      box-shadow:0 15px 40px rgba(0,0,0,.4);
+    }
+
+    h1{margin-bottom:20px;}
+
+    .gif img{
+      width:200px;
+      height:200px;
+      object-fit:cover;
+      border-radius:15px;
+      margin-bottom:20px;
+    }
+
+    .btns{
+      position:relative;
+      height:80px;
+    }
+
+    button{
+      padding:12px 18px;
+      font-size:16px;
+      border:none;
+      border-radius:12px;
+      cursor:pointer;
+      margin:5px;
+    }
+
+    #yesBtn{
+      background:#ff4d7d;
+      color:white;
+      transform:scale(var(--yesScale));
+      transition:.2s;
+    }
+
+    #noBtn{
+      background:#334155;
+      color:white;
+      position:relative;
+    }
+
+    @media(max-width:480px){
+      .gif img{width:160px;height:160px;}
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+  <h1>Will you be my valentine? 💌</h1>
+
+  <div class="gif">
+    <img id="gifImg" src="https://media.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif">
+  </div>
+
+  <div class="btns" id="btnArea">
+    <button id="yesBtn">Evet</button>
+    <button id="noBtn">Hayır</button>
+  </div>
+</div>
+
+<!-- EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+  // EMAILJS AYARLARI
+  const PUBLIC_KEY = "bn-4ovYXDC-mTpEyk";
+  const SERVICE_ID = "service_4hpe4mm";
+  const TEMPLATE_ID = "template_s76f1u8";
+
+  emailjs.init({
+    publicKey: PUBLIC_KEY,
+  });
+
+  const yesBtn = document.getElementById("yesBtn");
+  const noBtn = document.getElementById("noBtn");
+  const btnArea = document.getElementById("btnArea");
+
+  const noTexts = [
+    "Hayır",
+    "Hayır(Emin misin?)",
+    "Hayır(Bunu istemezsin 😭)",
+    "Hayır(Son kararın mı?)",
+    "Hayır(Kalbimi kırıyorsun 💔)",
+    "Hayır(Lütfen evet de 🥺)"
+  ];
+
+  let noCount = 0;
+  let yesScale = 1;
+
+function rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh, pad=10){
+  return (
+    ax < bx + bw + pad &&
+    ax + aw + pad > bx &&
+    ay < by + bh + pad &&
+    ay + ah + pad > by
+  );
+}
+
+function moveNoButton(){
+  const area = btnArea.getBoundingClientRect();
+
+  const noW = noBtn.offsetWidth, noH = noBtn.offsetHeight;
+  const yesX = yesBtn.offsetLeft, yesY = yesBtn.offsetTop;
+  const yesW = yesBtn.offsetWidth, yesH = yesBtn.offsetHeight;
+
+  const pad = 10;
+
+  // Dolaşma sınırları (container içinde)
+  const minX = pad;
+  const minY = pad;
+  const maxX = btnArea.clientWidth  - noW - pad;
+  const maxY = btnArea.clientHeight - noH - pad;
+
+  let x, y, tries = 0;
+
+  do {
+    x = minX + Math.random() * Math.max(1, (maxX - minX));
+    y = minY + Math.random() * Math.max(1, (maxY - minY));
+    tries++;
+    if (tries > 80) break; // çok nadir
+  } while (rectsOverlap(x, y, noW, noH, yesX, yesY, yesW, yesH, 14));
+
+  noBtn.style.left = x + "px";
+  noBtn.style.top  = y + "px";
+}
+
+  noBtn.addEventListener("click", function(){
+    noCount++;
+
+    noBtn.textContent = noTexts[Math.min(noCount, noTexts.length - 1)];
+
+    yesScale += 0.15;
+    document.documentElement.style.setProperty("--yesScale", yesScale);
+
+    moveNoButton();
+  });
+
+  yesBtn.addEventListener("click", function(){
+
+    // EMAIL GÖNDER
+    emailjs.send(
+      SERVICE_ID,
+      TEMPLATE_ID,
+      {
+        to_name: "Başak",
+        answer: "EVET 💖",
+        time: new Date().toLocaleString("tr-TR"),
+        page: window.location.href,
+        user_agent: navigator.userAgent
+      }
+    )
+    .then(function(response){
+      console.log("Mail gönderildi ✅", response.status);
+      alert("Yaaşaa! 💖 Mail geldi!");
+    })
+    .catch(function(error){
+      console.error("EmailJS hata:", error);
+      alert("Mail gönderilemedi 😢");
+    });
+
+    noBtn.disabled = true;
+  });
+
+});
+</script>
+
+</body>
+</html>
